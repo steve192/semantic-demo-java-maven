@@ -29,36 +29,23 @@ jobs:
           java-version: "19"
           distribution: "adopt"
           cache: maven
+      - name: Setup tools
+        run:  sudo apt update && sudo apt install xmlstarlet 
+      - name: update version  
+        run: |
+          REF_TYPE="${{github.ref_type}}"
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            TAG=${{  github.ref_name }}
+            TAG=${TAG#v}
+            echo $TAG
+            xmlstarlet edit -L -N w=http://maven.apache.org/POM/4.0.0  --update "//w:version" --value '${TAG}' pom.xml 
+          fi
       - name: maven-verify
         run: mvn verify --file pom.xml
       - uses: actions/upload-artifact@master
         with:
           name: java-build
           path: target/
-  sonarcloud:
-    name: SonarCloud
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up JDK 19
-        uses: actions/setup-java@v2
-        with:
-          java-version: "19"
-          distribution: "adopt"
-          cache: maven
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: Build and analyze
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify
   docker:
     name: BuildDocker
     needs: maven-verify
