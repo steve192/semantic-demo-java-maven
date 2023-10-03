@@ -38,7 +38,7 @@ jobs:
             TAG=${{  github.ref_name }}
             TAG=${TAG#v}
             echo $TAG
-            xmlstarlet edit -L -N w=http://maven.apache.org/POM/4.0.0  --update "//w:version" --value '${TAG}' pom.xml 
+            xmlstarlet edit -L -N w=http://maven.apache.org/POM/4.0.0  --update "//w:version" --value "${TAG}"" pom.xml 
           fi
       - name: maven-verify
         run: mvn verify --file pom.xml
